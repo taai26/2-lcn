@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Termination Portal</title>
+    <style>
+        :root { 
+            --hr-navy: #1B263B; 
+            --hr-blue: #415A77; 
+            --hr-bg: #F4F6F9; 
+            --card-bg: #FFFFFF;
+            --autofill-bg: #F8F9FA;
+            --border: #CED4DA;
+            --text-main: #212529;
+            --text-muted: #6C757D;
+        }
+
+        body { font-family: 'Calibri', 'Segoe UI', sans-serif; margin: 0; padding: 25px; background-color: var(--hr-bg); color: var(--text-main); }
+        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1300px; margin: 0 auto; }
+
+        /* Card Styling */
+        .card { background: var(--card-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
+        .form-container { border-top: 5px solid var(--hr-navy); }
+
+        /* Header & Status */
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .header-titles h1 { margin: 0; color: var(--hr-navy); font-size: 1.6rem; font-weight: bold; }
+        .status-badge { background: #E8F5E9; color: #1B5E20; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #C8E6C9; }
+
+        /* Search Section */
+        .search-area { background: #F8FAFC; padding: 20px; border-radius: 6px; margin-bottom: 30px; border: 1px dashed #CBD5E1; display: flex; align-items: center; gap: 15px; }
+        .search-area label { font-weight: bold; }
+        .search-area input { width: 250px; padding: 10px; border: 1px solid #94A3B8; border-radius: 4px; font-size: 1.05rem; font-weight: bold; }
+
+        /* Form Layout */
+        .section-title { font-size: 0.9rem; color: var(--hr-blue); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; border-left: 4px solid var(--hr-blue); padding-left: 10px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        
+        .field-group { display: flex; flex-direction: column; }
+        .field-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+        
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; font-family: 'Calibri', sans-serif; }
+        input[readonly] { background-color: var(--autofill-bg); color: #495057; border-color: #E9ECEF; }
+        
+        /* Phone Input Wrapper */
+        .phone-input-wrapper { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); }
+        .phone-prefix { background: #eee; padding: 10px; font-weight: bold; color: #555; border-right: 1px solid #ddd; }
+        .phone-input-wrapper input { border: none !important; flex: 1; border-radius: 0; }
+
+        /* Outlook Preview */
+        .outlook-subject-line { background: #F3F2F1; padding: 12px 15px; border: 1px solid #E1DFDD; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 0.95rem; }
+        .preview-content { border: 1px solid #E1DFDD; border-top: none; padding: 20px; background: white; overflow-x: auto; border-radius: 0 0 4px 4px; }
+
+        .btn-group { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+        .btn-outlook { background: var(--hr-navy); color: white; padding: 10px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
+    </style>
+</head>
+<body onload="initApp()">
+
+<div class="main-layout">
+    <div class="card form-container">
+        <div class="header-top">
+            <div class="header-titles">
+                <h1>HR Termination Portal</h1>
+                <p>Employee Offboarding System</p>
+            </div>
+            <div id="statusBadge" class="status-badge">↻ Syncing...</div>
+        </div>
+
+        <div class="search-area">
+            <label>Personnel ID (L#)</label>
+            <input type="text" id="inputWorkerNo" placeholder="606138" oninput="liveSearch()">
+        </div>
+
+        <form id="lcnForm">
+            <div class="section-title">Employee Profile (Auto-Mapped)</div>
+            <div class="form-grid">
+                <div class="field-group"><label>Full Name</label><input type="text" id="inputName" readonly></div>
+                <div class="field-group"><label>Nationality</label><input type="text" id="inputNationality" readonly></div>
+                <div class="field-group"><label>Job Profession</label><input type="text" id="inputProfession" readonly></div>
+                <div class="field-group"><label>Iqama Number</label><input type="text" id="inputIqama" readonly></div>
+                <div class="field-group"><label>Passport Number</label><input type="text" id="inputPassport" readonly></div>
+                <div class="field-group"><label>Arrival Date</label><input type="text" id="inputArrival" readonly></div>
+            </div>
+
+            <div class="section-title">Manual Data Entry</div>
+            <div class="form-grid">
+                <div class="field-group">
+                    <label>Mobile Number</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+966</span>
+                        <input type="text" id="inputPhone" maxlength="9" placeholder="5xxxxxxx" oninput="validatePhone()">
+                    </div>
+                </div>
+                <div class="field-group"><label>Last Working Day (LWD)</label><input type="date" id="inputLastDay" oninput="updateLivePreview()"></div>
+                <div class="field-group">
+                    <label>Reason</label>
+                    <select id="inputCase" oninput="updateLivePreview()">
+                        <option value="">-- Select --</option>
+                        <option value="Sick">Sick</option>
+                        <option value="Criminal Issue">Criminal Issue</option>
+                        <option value="Medical Unfit">Medical Unfit</option>
+                        <option value="Worker Breached Regulations">Worker Breached Regulations</option>
+                        <option value="Runaway">Runaway</option>
+                        <option value="Resignation">Resignation</option>
+                        <option value="Reject to work">Reject to work</option>
+                        <option value="Contract End">Contract End</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate Email Draft</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="outlook-subject-line" id="prevSubject">Subject: LCN Notification</div>
+    <div id="liveEmailBody" class="preview-content card"></div>
+</div>
+
+<script>
+    const SHEET_ID = "1ANtNwki7v93u5S-whyxuw40oEBgb_hfWGMuLvhyG1zw";
+    const GID = "604237371";
+    let MASTER_DATA = [];
+
+    function initApp() {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onLoad&gid=${GID}&headers=1&t=${Date.now()}`;
+        const sc = document.createElement('script');
+        sc.src = url;
+        document.body.appendChild(sc);
+    }
+
+    window.onLoad = function(res) {
+        MASTER_DATA = res.table.rows;
+        document.getElementById('statusBadge').innerHTML = `● Active (${MASTER_DATA.length} records loaded)`;
+        updateLivePreview();
+    };
+
+    function validatePhone() {
+        let val = document.getElementById('inputPhone').value.replace(/\D/g, '');
+        if (val.startsWith('0')) val = val.substring(1);
+        if (val.startsWith('966')) val = val.substring(3);
+        if (val.length > 0 && val[0] !== '5') {
+            alert("Phone number must start with 5.");
+            val = '';
+        }
+        document.getElementById('inputPhone').value = val;
+        updateLivePreview();
+    }
+
+    function liveSearch() {
+        const val = document.getElementById('inputWorkerNo').value.trim().replace(/^L_?/i, '');
+        if (!val) return clearFields("");
+
+        const match = MASTER_DATA.find(r => {
+            const rowId = r.c[0] ? String(r.c[0].v).replace(/^L_?/i, '') : '';
+            return rowId === val;
+        });
+
+        if (match) {
+            const d = match.c;
+            // Updated Mapping Indices
+            document.getElementById('inputName').value = d[1]?.v || "";
+            document.getElementById('inputProfession').value = d[2]?.v || ""; // Column 2
+            document.getElementById('inputNationality').value = d[3]?.v || ""; // Column 3
+            document.getElementById('inputIqama').value = d[4]?.v || "";      // Column 4
+            document.getElementById('inputPassport').value = d[5]?.v || "";
+            document.getElementById('inputArrival').value = d[7]?.f || d[7]?.v || "";
+        } else {
+            clearFields("Not Found");
+        }
+        updateLivePreview();
+    }
+
+    function clearFields(msg) {
+        ['inputName', 'inputProfession', 'inputNationality', 'inputPassport', 'inputIqama', 'inputArrival'].forEach(f => document.getElementById(f).value = msg);
+    }
+
+    function updateLivePreview() {
+        const id = document.getElementById('inputWorkerNo').value ? `L_${document.getElementById('inputWorkerNo').value}` : "---";
+        const phone = document.getElementById('inputPhone').value ? `+966 ${document.getElementById('inputPhone').value}` : "---";
+        const reason = document.getElementById('inputCase').value || "---";
+        const name = document.getElementById('inputName').value || "---";
+        const nat = document.getElementById('inputNationality').value || "---";
+        const prof = document.getElementById('inputProfession').value || "---";
+        const iqama = document.getElementById('inputIqama').value || "---";
+        const pass = document.getElementById('inputPassport').value || "---";
+        
+        const lwdRaw = document.getElementById('inputLastDay').value;
+        let formattedLWD = "---";
+        if (lwdRaw) {
+            const dt = new Date(lwdRaw);
+            const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            formattedLWD = `${dt.getDate().toString().padStart(2, '0')}-${m[dt.getMonth()]}-${dt.getFullYear()}`;
+        }
+
+        document.getElementById('prevSubject').innerText = `Subject: LCN: ${id} ${reason}`;
+
+        // Table color for LWD updated to black (default)
+        const html = `
+            <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#000;">
+                <p>Dear Mirasol,</p>
+                <p>Kindly send LCN to agency for the following worker:</p>
+                
+                <table style="border-collapse:collapse; width:100%; border:1px solid #000; font-family:'Calibri', sans-serif; font-size:11pt;">
+                    <tr style="background-color:#002060; color:#ffffff; text-align:center;">
+                        <th style="padding:5px; border:1px solid #000;">L_#</th>
+                        <th style="padding:5px; border:1px solid #000;">Name</th>
+                        <th style="padding:5px; border:1px solid #000;">Nationality</th>
+                        <th style="padding:5px; border:1px solid #000;">Profession</th>
+                        <th style="padding:5px; border:1px solid #000;">Iqama</th>
+                        <th style="padding:5px; border:1px solid #000;">Passport</th>
+                        <th style="padding:5px; border:1px solid #000;">Phone</th>
+                        <th style="padding:5px; border:1px solid #000;">LWD</th>
+                        <th style="padding:5px; border:1px solid #000;">Reason</th>
+                    </tr>
+                    <tr style="text-align:center; color:#000;">
+                        <td style="padding:5px; border:1px solid #000;">${id}</td>
+                        <td style="padding:5px; border:1px solid #000;">${name}</td>
+                        <td style="padding:5px; border:1px solid #000;">${nat}</td>
+                        <td style="padding:5px; border:1px solid #000;">${prof}</td>
+                        <td style="padding:5px; border:1px solid #000;">${iqama}</td>
+                        <td style="padding:5px; border:1px solid #000;">${pass}</td>
+                        <td style="padding:5px; border:1px solid #000;">${phone}</td>
+                        <td style="padding:5px; border:1px solid #000; font-weight:bold;">${formattedLWD}</td>
+                        <td style="padding:5px; border:1px solid #000; font-weight:bold;">${reason}</td>
+                    </tr>
+                </table>
+                <br>
+                <p>Best regards,</p>
+            </div>
+        `;
+        document.getElementById('liveEmailBody').innerHTML = html;
+    }
+
+    function downloadEml() {
+        const body = document.getElementById('liveEmailBody').innerHTML;
+        const subject = document.getElementById('prevSubject').innerText.replace('Subject: ', '');
+        const eml = `To: tamjad@smasco.com\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
+        const blob = new Blob([eml], { type: 'message/rfc822' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `LCN_Entry.eml`;
+        a.click();
+    }
+</script>
+</body>
+</html>
