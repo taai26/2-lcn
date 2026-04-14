@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCN - Request Online</title>
+    <title>Employee LCN - Online (SMASCO)</title>
     <style>
         :root { 
             --hr-navy: #1B263B; 
@@ -14,52 +14,51 @@
             --border: #CED4DA;
             --text-main: #212529;
             --accent-green: #2A9D8F;
-            --table-header: #334155; 
+            --calc-theme: #FFF9C4;
+            --calc-border: #FBC02D;
         }
 
-        /* Security: Disable Text Selection & Right-Click */
         body { 
             font-family: 'Calibri', 'Segoe UI', sans-serif; 
             margin: 0; 
-            padding: 25px; 
+            padding: 20px; 
             background-color: var(--hr-bg); 
             color: var(--text-main);
             -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
         }
 
-        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1400px; margin: 0 auto; }
-        .card { background: var(--card-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
+        .main-layout { display: flex; flex-direction: column; gap: 20px; max-width: 1400px; margin: 0 auto; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
         .form-container { border-top: 5px solid var(--hr-navy); }
 
-        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .brand-container { display: flex; align-items: center; gap: 15px; }
+        .ta-icon { background: var(--accent-green); color: white; width: 45px; height: 45px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
         .status-badge { background: #E8F5E9; color: #1B5E20; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #C8E6C9; }
 
-        .search-area { background: #F8FAFC; padding: 20px; border-radius: 6px; margin-bottom: 30px; border: 1px dashed #94A3B8; display: flex; align-items: center; gap: 15px; }
-        .search-area input { width: 250px; padding: 10px; border: 1px solid #94A3B8; border-radius: 4px; font-size: 1.05rem; font-weight: bold; }
-
-        .section-title { font-size: 0.9rem; color: var(--hr-blue); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; border-left: 4px solid var(--hr-blue); padding-left: 10px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .top-workflow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 6px; border: 1px dashed #94A3B8; }
+        
+        .section-title { font-size: 0.85rem; color: var(--hr-blue); font-weight: bold; margin-bottom: 12px; text-transform: uppercase; border-left: 4px solid var(--hr-blue); padding-left: 10px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; }
         
         .field-group { display: flex; flex-direction: column; }
         .field-group label { font-size: 0.75rem; font-weight: 600; color: #666; margin-bottom: 4px; }
         
-        input, select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; font-family: 'Calibri', sans-serif; }
+        input, select, textarea { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; font-family: 'Calibri', sans-serif; }
         input[readonly] { background-color: var(--autofill-bg); color: #444; }
         
-        .calc-box { background: #FFF9C4; border: 1px solid #FBC02D; padding: 15px; border-radius: 6px; margin-top: 10px; }
-        .calc-result { font-weight: bold; color: #D32F2F; font-size: 1.1rem; }
+        /* Tenure Field styling */
+        .tenure-field { background: var(--calc-theme); border: 1px solid var(--calc-border); color: #D32F2F; font-weight: bold; }
 
-        .phone-input-wrapper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); }
-        .phone-prefix { background: #eee; padding: 10px; font-weight: bold; border-right: 1px solid #ddd; font-size: 0.9rem; }
-        .phone-input-wrapper input { border: none !important; flex: 1; border-radius: 0; }
+        .phone-input-wrapper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); background: white; }
+        .phone-prefix { background: #eee; padding: 8px; font-weight: bold; border-right: 1px solid #ddd; font-size: 0.85rem; }
+        .phone-input-wrapper input { border: none !important; flex: 1; border-radius: 0; width: 100%; }
 
-        .outlook-subject-line { background: #F3F2F1; padding: 12px 15px; border: 1px solid #E1DFDD; border-radius: 4px 4px 0 0; font-weight: bold; color: #323130; }
+        .outlook-subject-line { background: #F3F2F1; padding: 12px 15px; border: 1px solid #E1DFDD; border-radius: 4px 4px 0 0; font-weight: bold; color: #323130; margin-top: 15px; }
         .preview-content { border: 1px solid #E1DFDD; border-top: none; padding: 20px; background: white; overflow-x: auto; border-radius: 0 0 4px 4px; }
 
-        .btn-group { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+        .btn-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
         .btn-add { background: var(--accent-green); color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
         .btn-outlook { background: var(--hr-navy); color: white; padding: 10px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
         .btn-clear { background: #e63946; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
@@ -70,51 +69,30 @@
 <div class="main-layout">
     <div class="card form-container">
         <div class="header-top">
-            <div>
-                <h1 style="margin:0; color:var(--hr-navy);">LCN - Request Online</h1>
-                <p style="margin:5px 0 0 0; color:#666;">Made by Taha Amjad</p>
+            <div class="brand-container">
+                <div class="ta-icon">TA</div>
+                <div>
+                    <h1 style="margin:0; color:var(--hr-navy); font-size: 1.5rem;">Employee LCN - Online (SMASCO)</h1>
+                    <p style="margin:2px 0 0 0; color:#666; font-size: 0.9rem;">Made by Taha Amjad</p>
+                </div>
             </div>
-            <div id="statusBadge" class="status-badge">↻ Syncing Database...</div>
-        </div>
-
-        <div class="search-area">
-            <label>Personnel ID (L#)</label>
-            <input type="text" id="inputWorkerNo" placeholder="e.g. 606138" oninput="liveSearch()">
+            <div id="statusBadge" class="status-badge">↻ Load AX Data...</div>
         </div>
 
         <form id="lcnForm">
-            <div class="section-title">Step 1: Employee Verification</div>
-            <div class="form-grid">
-                <div class="field-group"><label>Full Name</label><input type="text" id="inputName" readonly></div>
-                <div class="field-group"><label>Nationality</label><input type="text" id="inputNationality" readonly></div>
-                <div class="field-group"><label>Profession</label><input type="text" id="inputProfession" readonly></div>
-                <div class="field-group"><label>Agency</label><input type="text" id="inputAgency" readonly></div>
-                <div class="field-group"><label>Gender</label><input type="text" id="inputGender" readonly></div>
-                <div class="field-group"><label>Iqama No.</label><input type="text" id="inputIqama" readonly></div>
-                <div class="field-group"><label>Passport No.</label><input type="text" id="inputPassport" readonly></div>
-            </div>
-
-            <div class="section-title">Step 2: Probation & Timeline (Internal Only)</div>
-            <div class="form-grid">
-                <div class="field-group"><label>Border Issue Date</label><input type="text" id="inputBorderDate" readonly></div>
-                <div class="field-group"><label>L.W.D</label><input type="date" id="inputLastDay" oninput="calculateDays()"></div>
-                <div class="calc-box">
-                    <label style="font-size:0.7rem; display:block; margin-bottom:5px;">DAYS IN SERVICE:</label>
-                    <span id="dayResult" class="calc-result">0 Days</span>
-                </div>
-            </div>
-
-            <div class="section-title">Step 3: Termination Details</div>
-            <div class="form-grid">
+            <div class="top-workflow-grid">
                 <div class="field-group">
-                    <label>Mobile Number</label>
-                    <div class="phone-input-wrapper">
-                        <span class="phone-prefix">+966</span>
-                        <input type="text" id="inputPhone" maxlength="9" placeholder="5xxxxxxx" oninput="validatePhone()">
-                    </div>
+                    <label style="font-weight: 800; color: var(--hr-navy);">Personnel ID (L#)</label>
+                    <input type="text" id="inputWorkerNo" placeholder="e.g. 606138" oninput="liveSearch()" style="border: 2px solid var(--hr-blue);">
                 </div>
+
                 <div class="field-group">
-                    <label>Reason</label>
+                    <label>Last Working Date</label>
+                    <input type="date" id="inputLastDay" oninput="calculateDays()">
+                </div>
+
+                <div class="field-group">
+                    <label>Case Selection</label>
                     <select id="inputCase" oninput="renderPreview()">
                         <option value="">-- Select --</option>
                         <option value="Sick">Sick</option>
@@ -129,11 +107,38 @@
                         <option value="Lack of Profession">Lack of Profession</option>
                     </select>
                 </div>
+
+                <div class="field-group">
+                    <label>Mobile Number (+966)</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+966</span>
+                        <input type="text" id="inputPhone" maxlength="9" placeholder="5xxxxxxx" oninput="validatePhone()">
+                    </div>
+                </div>
             </div>
 
-            <div class="field-group" style="margin-bottom:20px;">
+            <div class="section-title">Step 1: Employee Verification</div>
+            <div class="form-grid">
+                <div class="field-group"><label>Full Name</label><input type="text" id="inputName" readonly></div>
+                <div class="field-group"><label>Nationality</label><input type="text" id="inputNationality" readonly></div>
+                <div class="field-group"><label>Job Profession</label><input type="text" id="inputProfession" readonly></div>
+                <div class="field-group"><label>Agency</label><input type="text" id="inputAgency" readonly></div>
+                <div class="field-group"><label>Gender</label><input type="text" id="inputGender" readonly></div>
+                <div class="field-group"><label>Iqama No.</label><input type="text" id="inputIqama" readonly></div>
+                <div class="field-group"><label>Passport No.</label><input type="text" id="inputPassport" readonly></div>
+                <div class="field-group">
+                    <label>Arrival Date (Border Date)</label>
+                    <input type="text" id="inputBorderDate" readonly>
+                </div>
+                <div class="field-group">
+                    <label>Tenure in Service</label>
+                    <input type="text" id="dayResult" class="tenure-field" value="0 Years, 0 Months, 0 Days" readonly>
+                </div>
+            </div>
+
+            <div class="field-group" style="margin-bottom:15px;">
                 <label>Additional Email Notes</label>
-                <textarea id="inputExtraDetails" placeholder="Add specific details for the email above the table..." oninput="renderPreview()"></textarea>
+                <textarea id="inputExtraDetails" placeholder="Add specific details for the email..." oninput="renderPreview()" style="height: 60px;"></textarea>
             </div>
 
             <div class="btn-group">
@@ -155,7 +160,6 @@
     let EMPLOYEE_LIST = [];
     let RAW_BORDER_DATE = null;
 
-    // Security: Block keyboard shortcuts for View Source/Inspect
     document.onkeydown = function(e) {
         if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && (e.keyCode == 85 || e.keyCode == 83))) {
             return false;
@@ -171,7 +175,7 @@
 
     window.onLoad = function(res) {
         MASTER_DATA = res.table.rows;
-        document.getElementById('statusBadge').innerHTML = `● Connected (${MASTER_DATA.length} records)`;
+        document.getElementById('statusBadge').innerHTML = `● Load AX Data (${MASTER_DATA.length} records)`;
         renderPreview();
     };
 
@@ -186,13 +190,19 @@
 
     function calculateDays() {
         const lwdValue = document.getElementById('inputLastDay').value;
+        const display = document.getElementById('dayResult');
         if (RAW_BORDER_DATE && lwdValue) {
-            const d2 = new Date(lwdValue);
-            const diffTime = d2.getTime() - RAW_BORDER_DATE.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            document.getElementById('dayResult').innerText = diffDays >= 0 ? `${diffDays} Days` : "Invalid Range";
+            const endDate = new Date(lwdValue);
+            const startDate = RAW_BORDER_DATE;
+            if (endDate < startDate) { display.value = "Invalid Range"; return; }
+            let years = endDate.getFullYear() - startDate.getFullYear();
+            let months = endDate.getMonth() - startDate.getMonth();
+            let days = endDate.getDate() - startDate.getDate();
+            if (days < 0) { months--; days += new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate(); }
+            if (months < 0) { years--; months += 12; }
+            display.value = `${years} Years, ${months} Months, ${days} Days`;
         } else {
-            document.getElementById('dayResult').innerText = "0 Days";
+            display.value = "0 Years, 0 Months, 0 Days";
         }
         renderPreview();
     }
@@ -221,7 +231,6 @@
             document.getElementById('inputPassport').value = d[5]?.v || "N/A";
             document.getElementById('inputAgency').value = d[6]?.v || "";
             document.getElementById('inputGender').value = d[7]?.v || "";
-
             const borderRaw = d[8]?.v;
             RAW_BORDER_DATE = parseGoogleDate(borderRaw);
             if (RAW_BORDER_DATE) {
@@ -239,7 +248,7 @@
     function clearSearchFields(msg) {
         ['inputName', 'inputProfession', 'inputNationality', 'inputAgency', 'inputGender', 'inputIqama', 'inputPassport', 'inputBorderDate'].forEach(f => document.getElementById(f).value = msg);
         RAW_BORDER_DATE = null;
-        document.getElementById('dayResult').innerText = "0 Days";
+        document.getElementById('dayResult').value = "0 Years, 0 Months, 0 Days";
     }
 
     function addEmployee() {
@@ -247,14 +256,12 @@
         const phoneVal = document.getElementById('inputPhone').value;
         const lwdVal = document.getElementById('inputLastDay').value;
         const reasonVal = document.getElementById('inputCase').value;
-
         if (!idRaw || document.getElementById('inputName').value === "Not Found") return alert("Invalid Employee ID.");
-        if (!phoneVal || !lwdVal || !reasonVal) return alert("Kindly fill Phone, L.W.D, and Reason.");
-
+        if (!phoneVal || !lwdVal || !reasonVal) return alert("Kindly fill Phone, L.W.D, and Case.");
         const dt = new Date(lwdVal);
         const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const formattedLWD = `${dt.getDate().toString().padStart(2, '0')}-${m[dt.getMonth()]}-${dt.getFullYear()}`;
-
+        
         EMPLOYEE_LIST.push({
             id: `L_${idRaw}`,
             name: document.getElementById('inputName').value,
@@ -264,11 +271,11 @@
             iqama: document.getElementById('inputIqama').value,
             passport: document.getElementById('inputPassport').value,
             phone: `+966 ${phoneVal}`,
+            arrival: document.getElementById('inputBorderDate').value,
             lwd: formattedLWD,
             reason: reasonVal,
             agency: document.getElementById('inputAgency').value
         });
-
         renderPreview();
         document.getElementById('lcnForm').reset();
         clearSearchFields("");
@@ -280,18 +287,15 @@
     function renderPreview() {
         const container = document.getElementById('liveEmailBody');
         if (EMPLOYEE_LIST.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">List is empty. Add workers above.</p>';
+            container.innerHTML = '<p style="text-align:center; color:#000; padding:40px;">List is empty. Add workers above.</p>';
             return;
         }
-
         const extraHtml = document.getElementById('inputExtraDetails').value ? `<p>${document.getElementById('inputExtraDetails').value.replace(/\n/g, '<br>')}</p>` : '';
         document.getElementById('prevSubject').innerText = `Subject: LCN: ${EMPLOYEE_LIST.map(e => e.id).join(", ")}`;
-
         let rows = "";
         EMPLOYEE_LIST.forEach((e, index) => {
             const rowBg = (index % 2 === 0) ? "#FFFFFF" : "#F8FAFC";
-            rows += `
-            <tr style="background-color:${rowBg}; text-align:center; color:#334155;">
+            rows += `<tr style="background-color:${rowBg}; text-align:center; color:#000000;">
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.id}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.name}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.gender}</td>
@@ -300,29 +304,31 @@
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.iqama}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.passport}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.phone}</td>
-                <td style="padding:8px; border:1px solid #CBD5E1; color:#000;">${e.lwd}</td>
-                <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.reason}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.arrival}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.lwd}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.reason}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.agency}</td>
             </tr>`;
         });
 
         container.innerHTML = `
-            <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#334155;">
+            <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#000000;">
                 <p>Dear Mirasol,</p>
                 <p>Kindly send LCN to agency for the following workers:</p>
                 ${extraHtml}
-                <table style="border-collapse:collapse; width:100%; border:1px solid #CBD5E1; font-family:'Calibri', sans-serif; font-size:11pt;">
+                <table style="border-collapse:collapse; width:100%; border:1px solid #CBD5E1; font-family:'Calibri', sans-serif; font-size:10pt;">
                     <tr style="background-color:#334155; color:#ffffff; text-align:center;">
                         <th style="padding:10px; border:1px solid #CBD5E1;">L_#</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Name</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Gender</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Nationality</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Profession</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Passport</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Job Profession</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama No.</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Passport No.</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Phone</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">L.W.D</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Reason</th>
+                        <th style="background-color:#1E3A8A; padding:10px; border:1px solid #CBD5E1;">Arrival Date</th>
+                        <th style="background-color:#1E3A8A; padding:10px; border:1px solid #CBD5E1;">Last Working Date</th>
+                        <th style="background-color:#1E3A8A; padding:10px; border:1px solid #CBD5E1;">Case</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Agency</th>
                     </tr>
                     ${rows}
