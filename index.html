@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCN - Request Portal [Taha Amjad]</title>
+    <title>LCN - Request Online</title>
     <style>
         :root { 
             --hr-navy: #1B263B; 
@@ -17,9 +17,20 @@
             --table-header: #334155; 
         }
 
-        body { font-family: 'Calibri', 'Segoe UI', sans-serif; margin: 0; padding: 25px; background-color: var(--hr-bg); color: var(--text-main); }
-        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1400px; margin: 0 auto; }
+        /* Security: Disable Text Selection & Right-Click */
+        body { 
+            font-family: 'Calibri', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 25px; 
+            background-color: var(--hr-bg); 
+            color: var(--text-main);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
 
+        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1400px; margin: 0 auto; }
         .card { background: var(--card-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
         .form-container { border-top: 5px solid var(--hr-navy); }
 
@@ -54,14 +65,14 @@
         .btn-clear { background: #e63946; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
     </style>
 </head>
-<body onload="initApp()">
+<body onload="initApp()" oncontextmenu="return false">
 
 <div class="main-layout">
     <div class="card form-container">
         <div class="header-top">
             <div>
-                <h1 style="margin:0; color:var(--hr-navy);">HR Termination Portal</h1>
-                <p style="margin:5px 0 0 0; color:#666;">Official Batch Communication Tool</p>
+                <h1 style="margin:0; color:var(--hr-navy);">LCN - Request Online</h1>
+                <p style="margin:5px 0 0 0; color:#666;">Made by Taha Amjad</p>
             </div>
             <div id="statusBadge" class="status-badge">↻ Syncing Database...</div>
         </div>
@@ -79,13 +90,14 @@
                 <div class="field-group"><label>Profession</label><input type="text" id="inputProfession" readonly></div>
                 <div class="field-group"><label>Agency</label><input type="text" id="inputAgency" readonly></div>
                 <div class="field-group"><label>Gender</label><input type="text" id="inputGender" readonly></div>
-                <div class="field-group"><label>Iqama / Passport</label><input type="text" id="inputIqamaPass" readonly></div>
+                <div class="field-group"><label>Iqama No.</label><input type="text" id="inputIqama" readonly></div>
+                <div class="field-group"><label>Passport No.</label><input type="text" id="inputPassport" readonly></div>
             </div>
 
             <div class="section-title">Step 2: Probation & Timeline (Internal Only)</div>
             <div class="form-grid">
                 <div class="field-group"><label>Border Issue Date</label><input type="text" id="inputBorderDate" readonly></div>
-                <div class="field-group"><label>Last Working Day (LWD)</label><input type="date" id="inputLastDay" oninput="calculateDays()"></div>
+                <div class="field-group"><label>L.W.D</label><input type="date" id="inputLastDay" oninput="calculateDays()"></div>
                 <div class="calc-box">
                     <label style="font-size:0.7rem; display:block; margin-bottom:5px;">DAYS IN SERVICE:</label>
                     <span id="dayResult" class="calc-result">0 Days</span>
@@ -143,6 +155,13 @@
     let EMPLOYEE_LIST = [];
     let RAW_BORDER_DATE = null;
 
+    // Security: Block keyboard shortcuts for View Source/Inspect
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && (e.keyCode == 85 || e.keyCode == 83))) {
+            return false;
+        }
+    };
+
     function initApp() {
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onLoad&gid=${GID}&headers=1&t=${Date.now()}`;
         const sc = document.createElement('script');
@@ -198,9 +217,10 @@
             document.getElementById('inputName').value = d[1]?.v || "";
             document.getElementById('inputProfession').value = d[2]?.v || ""; 
             document.getElementById('inputNationality').value = d[3]?.v || ""; 
+            document.getElementById('inputIqama').value = d[4]?.v || "N/A";
+            document.getElementById('inputPassport').value = d[5]?.v || "N/A";
             document.getElementById('inputAgency').value = d[6]?.v || "";
             document.getElementById('inputGender').value = d[7]?.v || "";
-            document.getElementById('inputIqamaPass').value = d[4]?.v || d[5]?.v || "";
 
             const borderRaw = d[8]?.v;
             RAW_BORDER_DATE = parseGoogleDate(borderRaw);
@@ -217,7 +237,7 @@
     }
 
     function clearSearchFields(msg) {
-        ['inputName', 'inputProfession', 'inputNationality', 'inputAgency', 'inputGender', 'inputIqamaPass', 'inputBorderDate'].forEach(f => document.getElementById(f).value = msg);
+        ['inputName', 'inputProfession', 'inputNationality', 'inputAgency', 'inputGender', 'inputIqama', 'inputPassport', 'inputBorderDate'].forEach(f => document.getElementById(f).value = msg);
         RAW_BORDER_DATE = null;
         document.getElementById('dayResult').innerText = "0 Days";
     }
@@ -229,7 +249,7 @@
         const reasonVal = document.getElementById('inputCase').value;
 
         if (!idRaw || document.getElementById('inputName').value === "Not Found") return alert("Invalid Employee ID.");
-        if (!phoneVal || !lwdVal || !reasonVal) return alert("Fill Phone, LWD, and Reason.");
+        if (!phoneVal || !lwdVal || !reasonVal) return alert("Kindly fill Phone, L.W.D, and Reason.");
 
         const dt = new Date(lwdVal);
         const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -241,7 +261,8 @@
             gender: document.getElementById('inputGender').value,
             nat: document.getElementById('inputNationality').value,
             prof: document.getElementById('inputProfession').value,
-            iqama: document.getElementById('inputIqamaPass').value,
+            iqama: document.getElementById('inputIqama').value,
+            passport: document.getElementById('inputPassport').value,
             phone: `+966 ${phoneVal}`,
             lwd: formattedLWD,
             reason: reasonVal,
@@ -251,6 +272,7 @@
         renderPreview();
         document.getElementById('lcnForm').reset();
         clearSearchFields("");
+        document.getElementById('inputWorkerNo').value = "";
     }
 
     function clearTable() { if(confirm("Clear current batch?")) { EMPLOYEE_LIST = []; renderPreview(); } }
@@ -276,6 +298,7 @@
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.nat}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.prof}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.iqama}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.passport}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.phone}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1; color:#000;">${e.lwd}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.reason}</td>
@@ -295,9 +318,10 @@
                         <th style="padding:10px; border:1px solid #CBD5E1;">Gender</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Nationality</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Profession</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama/Passport</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Passport</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Phone</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">LWD</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">L.W.D</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Reason</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Agency</th>
                     </tr>
@@ -311,13 +335,9 @@
         if (EMPLOYEE_LIST.length === 0) return alert("Batch is empty!");
         const body = document.getElementById('liveEmailBody').innerHTML;
         const subject = document.getElementById('prevSubject').innerText.replace('Subject: ', '');
-        
-        // Formulate the EML content with headers
         const to = "maugusto@smasco.com";
         const cc = "manpoweraffairshome@smasco.com";
-        
         const eml = `To: ${to}\nCc: ${cc}\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
-        
         const blob = new Blob([eml], { type: 'message/rfc822' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
