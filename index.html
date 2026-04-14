@@ -14,6 +14,7 @@
             --border: #CED4DA;
             --text-main: #212529;
             --accent-green: #2A9D8F;
+            --table-header: #334155; 
         }
 
         body { font-family: 'Calibri', 'Segoe UI', sans-serif; margin: 0; padding: 25px; background-color: var(--hr-bg); color: var(--text-main); }
@@ -34,14 +35,15 @@
         .field-group { display: flex; flex-direction: column; }
         .field-group label { font-size: 0.75rem; font-weight: 600; color: #666; margin-bottom: 4px; }
         
-        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; }
+        input, select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; font-family: 'Calibri', sans-serif; }
         input[readonly] { background-color: var(--autofill-bg); color: #444; }
+        textarea { resize: vertical; min-height: 60px; }
         
         .phone-input-wrapper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); }
         .phone-prefix { background: #eee; padding: 10px; font-weight: bold; border-right: 1px solid #ddd; font-size: 0.9rem; }
         .phone-input-wrapper input { border: none !important; flex: 1; border-radius: 0; }
 
-        .outlook-subject-line { background: #F3F2F1; padding: 12px 15px; border: 1px solid #E1DFDD; border-radius: 4px 4px 0 0; font-weight: bold; }
+        .outlook-subject-line { background: #F3F2F1; padding: 12px 15px; border: 1px solid #E1DFDD; border-radius: 4px 4px 0 0; font-weight: bold; color: #323130; }
         .preview-content { border: 1px solid #E1DFDD; border-top: none; padding: 20px; background: white; overflow-x: auto; border-radius: 0 0 4px 4px; }
 
         .btn-group { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
@@ -57,7 +59,7 @@
         <div class="header-top">
             <div>
                 <h1 style="margin:0; color:var(--hr-navy);">HR Termination Portal</h1>
-                <p style="margin:5px 0 0 0; color:#666;">Look up and add multiple employees to a single notification.</p>
+                <p style="margin:5px 0 0 0; color:#666;">Batch Processing System</p>
             </div>
             <div id="statusBadge" class="status-badge">↻ Syncing Database...</div>
         </div>
@@ -92,28 +94,35 @@
                     <select id="inputCase">
                         <option value="">-- Select --</option>
                         <option value="Sick">Sick</option>
-                        <option value="Criminal Issue">Criminal Issue</option>
-                        <option value="Medical Unfit">Medical Unfit</option>
-                        <option value="Worker Breached Regulations">Worker Breached Regulations</option>
-                        <option value="Runaway">Runaway</option>
+                        <option value="Reject to Work">Reject to Work</option>
                         <option value="Resignation">Resignation</option>
-                        <option value="Reject to work">Reject to work</option>
-                        <option value="Contract End">Contract End</option>
+                        <option value="Medically Unfit">Medically Unfit</option>
+                        <option value="Runaway">Runaway</option>
+                        <option value="Pregnant">Pregnant</option>
+                        <option value="Criminal Case">Criminal Case</option>
+                        <option value="Dismissed">Dismissed</option>
+                        <option value="Worker breached the Work Regulations">Worker breached the Work Regulations</option>
                     </select>
                 </div>
             </div>
 
+            <div class="section-title">Step 3: Email Personalization</div>
+            <div class="field-group" style="margin-bottom:20px;">
+                <label>Additional Details (Appears above the table)</label>
+                <textarea id="inputExtraDetails" placeholder="e.g., Any specific notes for Mirasol..." oninput="renderPreview()"></textarea>
+            </div>
+
             <div class="btn-group">
                 <button type="button" class="btn-clear" onclick="clearTable()">Clear List</button>
-                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add to List</button>
-                <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate Outlook Email</button>
+                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add Employee to List</button>
+                <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate EML File</button>
             </div>
         </form>
     </div>
 
     <div class="outlook-subject-line" id="prevSubject">Subject: LCN Notification</div>
     <div id="liveEmailBody" class="preview-content card">
-        <p style="text-align:center; color:#999; margin:40px 0;">Your employee list is currently empty.</p>
+        <p style="text-align:center; color:#999; margin:40px 0;">Add employees to generate the preview table.</p>
     </div>
 </div>
 
@@ -132,7 +141,7 @@
 
     window.onLoad = function(res) {
         MASTER_DATA = res.table.rows;
-        document.getElementById('statusBadge').innerHTML = `● Active (${MASTER_DATA.length} records loaded)`;
+        document.getElementById('statusBadge').innerHTML = `● Connected (${MASTER_DATA.length} records)`;
     };
 
     function validatePhone() {
@@ -153,9 +162,9 @@
         if (match) {
             const d = match.c;
             document.getElementById('inputName').value = d[1]?.v || "";
-            document.getElementById('inputProfession').value = d[2]?.v || ""; // Column 2
-            document.getElementById('inputNationality').value = d[3]?.v || ""; // Column 3
-            document.getElementById('inputIqama').value = d[4]?.v || "";      // Column 4
+            document.getElementById('inputProfession').value = d[2]?.v || ""; 
+            document.getElementById('inputNationality').value = d[3]?.v || ""; 
+            document.getElementById('inputIqama').value = d[4]?.v || "";      
             document.getElementById('inputPassport').value = d[5]?.v || "";
         } else {
             clearFormFields("Not Found");
@@ -168,25 +177,18 @@
 
     function addEmployee() {
         const idRaw = document.getElementById('inputWorkerNo').value.trim().replace(/^L_?/i, '');
-        if (!idRaw || document.getElementById('inputName').value === "Not Found") {
-            alert("Please enter a valid Employee ID first.");
-            return;
-        }
-
         const phoneVal = document.getElementById('inputPhone').value;
         const lwdVal = document.getElementById('inputLastDay').value;
         const reasonVal = document.getElementById('inputCase').value;
 
-        if (!phoneVal || !lwdVal || !reasonVal) {
-            alert("Please fill in Phone, LWD, and Reason before adding.");
-            return;
-        }
+        if (!idRaw || document.getElementById('inputName').value === "Not Found") return alert("Select a valid Employee.");
+        if (!phoneVal || !lwdVal || !reasonVal) return alert("Fill in Phone, LWD, and Reason.");
 
         const dt = new Date(lwdVal);
         const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const formattedLWD = `${dt.getDate().toString().padStart(2, '0')}-${m[dt.getMonth()]}-${dt.getFullYear()}`;
 
-        const emp = {
+        EMPLOYEE_LIST.push({
             id: `L_${idRaw}`,
             name: document.getElementById('inputName').value,
             nat: document.getElementById('inputNationality').value,
@@ -196,66 +198,60 @@
             phone: `+966 ${phoneVal}`,
             lwd: formattedLWD,
             reason: reasonVal
-        };
+        });
 
-        EMPLOYEE_LIST.push(emp);
         renderPreview();
-        
-        // Clear inputs for next entry
-        document.getElementById('inputWorkerNo').value = "";
-        document.getElementById('inputPhone').value = "";
-        document.getElementById('inputLastDay').value = "";
-        document.getElementById('inputCase').value = "";
+        document.getElementById('lcnForm').reset();
         clearFormFields("");
     }
 
-    function clearTable() {
-        if(confirm("Clear the entire list?")) {
-            EMPLOYEE_LIST = [];
-            renderPreview();
-        }
-    }
+    function clearTable() { if(confirm("Clear list?")) { EMPLOYEE_LIST = []; renderPreview(); } }
 
     function renderPreview() {
         if (EMPLOYEE_LIST.length === 0) {
-            document.getElementById('liveEmailBody').innerHTML = '<p style="text-align:center; color:#999; margin:40px 0;">Your employee list is currently empty.</p>';
+            document.getElementById('liveEmailBody').innerHTML = '<p style="text-align:center; color:#999; margin:40px 0;">Add employees to generate the preview table.</p>';
             document.getElementById('prevSubject').innerText = "Subject: LCN Notification";
             return;
         }
 
-        let subjectStr = "LCN: " + EMPLOYEE_LIST.map(e => e.id).join(", ");
-        document.getElementById('prevSubject').innerText = `Subject: ${subjectStr}`;
+        const extraDetails = document.getElementById('inputExtraDetails').value;
+        const extraHtml = extraDetails ? `<p>${extraDetails.replace(/\n/g, '<br>')}</p>` : '';
+
+        document.getElementById('prevSubject').innerText = `Subject: LCN: ${EMPLOYEE_LIST.map(e => e.id).join(", ")}`;
 
         let rows = "";
-        EMPLOYEE_LIST.forEach(e => {
-            rows += `<tr style="text-align:center; color:#000;">
-                <td style="padding:5px; border:1px solid #000;">${e.id}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.name}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.nat}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.prof}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.iqama}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.pass}</td>
-                <td style="padding:5px; border:1px solid #000;">${e.phone}</td>
-                <td style="padding:5px; border:1px solid #000; font-weight:bold;">${e.lwd}</td>
-                <td style="padding:5px; border:1px solid #000; font-weight:bold;">${e.reason}</td>
+        EMPLOYEE_LIST.forEach((e, index) => {
+            const rowBg = (index % 2 === 0) ? "#FFFFFF" : "#F8FAFC";
+            rows += `
+            <tr style="background-color:${rowBg}; text-align:center; color:#334155;">
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.id}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.name}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.nat}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.prof}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.iqama}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.pass}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.phone}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.lwd || 'dd-MM-yyyy'}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.reason}</td>
             </tr>`;
         });
 
         const html = `
-            <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#000;">
+            <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#334155;">
                 <p>Dear Mirasol,</p>
                 <p>Kindly send LCN to agency for the following workers:</p>
-                <table style="border-collapse:collapse; width:100%; border:1px solid #000; font-family:'Calibri', sans-serif; font-size:11pt;">
-                    <tr style="background-color:#002060; color:#ffffff; text-align:center;">
-                        <th style="padding:5px; border:1px solid #000;">L_#</th>
-                        <th style="padding:5px; border:1px solid #000;">Name</th>
-                        <th style="padding:5px; border:1px solid #000;">Nationality</th>
-                        <th style="padding:5px; border:1px solid #000;">Profession</th>
-                        <th style="padding:5px; border:1px solid #000;">Iqama</th>
-                        <th style="padding:5px; border:1px solid #000;">Passport</th>
-                        <th style="padding:5px; border:1px solid #000;">Phone</th>
-                        <th style="padding:5px; border:1px solid #000;">LWD</th>
-                        <th style="padding:5px; border:1px solid #000;">Reason</th>
+                ${extraHtml}
+                <table style="border-collapse:collapse; width:100%; border:1px solid #CBD5E1; font-family:'Calibri', sans-serif; font-size:11pt;">
+                    <tr style="background-color:#334155; color:#ffffff; text-align:center;">
+                        <th style="padding:10px; border:1px solid #CBD5E1;">L_#</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Name</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Nationality</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Profession</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Passport</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Phone</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">LWD</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Reason</th>
                     </tr>
                     ${rows}
                 </table>
@@ -265,14 +261,14 @@
     }
 
     function downloadEml() {
-        if (EMPLOYEE_LIST.length === 0) { alert("Add at least one employee first!"); return; }
+        if (EMPLOYEE_LIST.length === 0) return alert("List is empty!");
         const body = document.getElementById('liveEmailBody').innerHTML;
         const subject = document.getElementById('prevSubject').innerText.replace('Subject: ', '');
         const eml = `To: tamjad@smasco.com\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
         const blob = new Blob([eml], { type: 'message/rfc822' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `LCN_Batch.eml`;
+        a.download = `LCN_Batch_${new Date().getTime()}.eml`;
         a.click();
     }
 </script>
