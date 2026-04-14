@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Termination Portal [Taha Amjad]</title>
+    <title>LCN - Request Portal [Taha Amjad]</title>
     <style>
         :root { 
             --hr-navy: #1B263B; 
@@ -18,7 +18,7 @@
         }
 
         body { font-family: 'Calibri', 'Segoe UI', sans-serif; margin: 0; padding: 25px; background-color: var(--hr-bg); color: var(--text-main); }
-        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1300px; margin: 0 auto; }
+        .main-layout { display: flex; flex-direction: column; gap: 25px; max-width: 1400px; margin: 0 auto; }
 
         .card { background: var(--card-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
         .form-container { border-top: 5px solid var(--hr-navy); }
@@ -61,7 +61,7 @@
         <div class="header-top">
             <div>
                 <h1 style="margin:0; color:var(--hr-navy);">HR Termination Portal</h1>
-                <p style="margin:5px 0 0 0; color:#666;">Worker Data & Probation Tracking</p>
+                <p style="margin:5px 0 0 0; color:#666;">Official Batch Communication Tool</p>
             </div>
             <div id="statusBadge" class="status-badge">↻ Syncing Database...</div>
         </div>
@@ -82,7 +82,7 @@
                 <div class="field-group"><label>Iqama / Passport</label><input type="text" id="inputIqamaPass" readonly></div>
             </div>
 
-            <div class="section-title">Step 2: Probation & Timeline (Internal)</div>
+            <div class="section-title">Step 2: Probation & Timeline (Internal Only)</div>
             <div class="form-grid">
                 <div class="field-group"><label>Border Issue Date</label><input type="text" id="inputBorderDate" readonly></div>
                 <div class="field-group"><label>Last Working Day (LWD)</label><input type="date" id="inputLastDay" oninput="calculateDays()"></div>
@@ -114,6 +114,7 @@
                         <option value="Criminal Case">Criminal Case</option>
                         <option value="Dismissed">Dismissed</option>
                         <option value="Worker breached the Work Regulations">Worker breached the Work Regulations</option>
+                        <option value="Lack of Profession">Lack of Profession</option>
                     </select>
                 </div>
             </div>
@@ -157,7 +158,7 @@
 
     function parseGoogleDate(dateStr) {
         if (!dateStr) return null;
-        if (dateStr.includes("Date(")) {
+        if (typeof dateStr === 'string' && dateStr.includes("Date(")) {
             const parts = dateStr.match(/\d+/g);
             return new Date(parts[0], parts[1], parts[2]);
         }
@@ -165,9 +166,7 @@
     }
 
     function calculateDays() {
-        const borderDateInput = document.getElementById('inputBorderDate').value;
         const lwdValue = document.getElementById('inputLastDay').value;
-        
         if (RAW_BORDER_DATE && lwdValue) {
             const d2 = new Date(lwdValue);
             const diffTime = d2.getTime() - RAW_BORDER_DATE.getTime();
@@ -199,11 +198,10 @@
             document.getElementById('inputName').value = d[1]?.v || "";
             document.getElementById('inputProfession').value = d[2]?.v || ""; 
             document.getElementById('inputNationality').value = d[3]?.v || ""; 
-            document.getElementById('inputAgency').value = d[6]?.v || ""; // Col 6
-            document.getElementById('inputGender').value = d[7]?.v || ""; // Col 7
+            document.getElementById('inputAgency').value = d[6]?.v || "";
+            document.getElementById('inputGender').value = d[7]?.v || "";
             document.getElementById('inputIqamaPass').value = d[4]?.v || d[5]?.v || "";
 
-            // Border Date (Col 8)
             const borderRaw = d[8]?.v;
             RAW_BORDER_DATE = parseGoogleDate(borderRaw);
             if (RAW_BORDER_DATE) {
@@ -240,12 +238,14 @@
         EMPLOYEE_LIST.push({
             id: `L_${idRaw}`,
             name: document.getElementById('inputName').value,
+            gender: document.getElementById('inputGender').value,
             nat: document.getElementById('inputNationality').value,
             prof: document.getElementById('inputProfession').value,
             iqama: document.getElementById('inputIqamaPass').value,
             phone: `+966 ${phoneVal}`,
             lwd: formattedLWD,
-            reason: reasonVal
+            reason: reasonVal,
+            agency: document.getElementById('inputAgency').value
         });
 
         renderPreview();
@@ -272,12 +272,14 @@
             <tr style="background-color:${rowBg}; text-align:center; color:#334155;">
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.id}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.name}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.gender}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.nat}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.prof}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.iqama}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.phone}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1; color:#000;">${e.lwd}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.reason}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1;">${e.agency}</td>
             </tr>`;
         });
 
@@ -290,12 +292,14 @@
                     <tr style="background-color:#334155; color:#ffffff; text-align:center;">
                         <th style="padding:10px; border:1px solid #CBD5E1;">L_#</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Name</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Gender</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Nationality</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Profession</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Iqama/Passport</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Phone</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">LWD</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Reason</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Agency</th>
                     </tr>
                     ${rows}
                 </table>
@@ -307,7 +311,13 @@
         if (EMPLOYEE_LIST.length === 0) return alert("Batch is empty!");
         const body = document.getElementById('liveEmailBody').innerHTML;
         const subject = document.getElementById('prevSubject').innerText.replace('Subject: ', '');
-        const eml = `To: tamjad@smasco.com\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
+        
+        // Formulate the EML content with headers
+        const to = "maugusto@smasco.com";
+        const cc = "manpoweraffairshome@smasco.com";
+        
+        const eml = `To: ${to}\nCc: ${cc}\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
+        
         const blob = new Blob([eml], { type: 'message/rfc822' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
