@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Termination Portal</title>
+    <title>HR Termination Portal [Taha Amjad]</title>
     <style>
         :root { 
             --hr-navy: #1B263B; 
@@ -37,8 +37,10 @@
         
         input, select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; font-family: 'Calibri', sans-serif; }
         input[readonly] { background-color: var(--autofill-bg); color: #444; }
-        textarea { resize: vertical; min-height: 60px; }
         
+        .calc-box { background: #FFF9C4; border: 1px solid #FBC02D; padding: 15px; border-radius: 6px; margin-top: 10px; }
+        .calc-result { font-weight: bold; color: #D32F2F; font-size: 1.1rem; }
+
         .phone-input-wrapper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); }
         .phone-prefix { background: #eee; padding: 10px; font-weight: bold; border-right: 1px solid #ddd; font-size: 0.9rem; }
         .phone-input-wrapper input { border: none !important; flex: 1; border-radius: 0; }
@@ -59,7 +61,7 @@
         <div class="header-top">
             <div>
                 <h1 style="margin:0; color:var(--hr-navy);">HR Termination Portal</h1>
-                <p style="margin:5px 0 0 0; color:#666;">Batch Processing System</p>
+                <p style="margin:5px 0 0 0; color:#666;">Worker Data & Probation Tracking</p>
             </div>
             <div id="statusBadge" class="status-badge">↻ Syncing Database...</div>
         </div>
@@ -70,16 +72,27 @@
         </div>
 
         <form id="lcnForm">
-            <div class="section-title">Step 1: Verify Profile</div>
+            <div class="section-title">Step 1: Employee Verification</div>
             <div class="form-grid">
                 <div class="field-group"><label>Full Name</label><input type="text" id="inputName" readonly></div>
                 <div class="field-group"><label>Nationality</label><input type="text" id="inputNationality" readonly></div>
                 <div class="field-group"><label>Profession</label><input type="text" id="inputProfession" readonly></div>
-                <div class="field-group"><label>Iqama</label><input type="text" id="inputIqama" readonly></div>
-                <div class="field-group"><label>Passport</label><input type="text" id="inputPassport" readonly></div>
+                <div class="field-group"><label>Agency</label><input type="text" id="inputAgency" readonly></div>
+                <div class="field-group"><label>Gender</label><input type="text" id="inputGender" readonly></div>
+                <div class="field-group"><label>Iqama / Passport</label><input type="text" id="inputIqamaPass" readonly></div>
             </div>
 
-            <div class="section-title">Step 2: Termination Details</div>
+            <div class="section-title">Step 2: Probation & Timeline (Internal)</div>
+            <div class="form-grid">
+                <div class="field-group"><label>Border Issue Date</label><input type="text" id="inputBorderDate" readonly></div>
+                <div class="field-group"><label>Last Working Day (LWD)</label><input type="date" id="inputLastDay" oninput="calculateDays()"></div>
+                <div class="calc-box">
+                    <label style="font-size:0.7rem; display:block; margin-bottom:5px;">DAYS IN SERVICE:</label>
+                    <span id="dayResult" class="calc-result">0 Days</span>
+                </div>
+            </div>
+
+            <div class="section-title">Step 3: Termination Details</div>
             <div class="form-grid">
                 <div class="field-group">
                     <label>Mobile Number</label>
@@ -88,10 +101,9 @@
                         <input type="text" id="inputPhone" maxlength="9" placeholder="5xxxxxxx" oninput="validatePhone()">
                     </div>
                 </div>
-                <div class="field-group"><label>Last Working Day (LWD)</label><input type="date" id="inputLastDay"></div>
                 <div class="field-group">
                     <label>Reason</label>
-                    <select id="inputCase">
+                    <select id="inputCase" oninput="renderPreview()">
                         <option value="">-- Select --</option>
                         <option value="Sick">Sick</option>
                         <option value="Reject to Work">Reject to Work</option>
@@ -106,24 +118,21 @@
                 </div>
             </div>
 
-            <div class="section-title">Step 3: Email Personalization</div>
             <div class="field-group" style="margin-bottom:20px;">
-                <label>Additional Details (Appears above the table)</label>
-                <textarea id="inputExtraDetails" placeholder="e.g., Any specific notes for Mirasol..." oninput="renderPreview()"></textarea>
+                <label>Additional Email Notes</label>
+                <textarea id="inputExtraDetails" placeholder="Add specific details for the email above the table..." oninput="renderPreview()"></textarea>
             </div>
 
             <div class="btn-group">
-                <button type="button" class="btn-clear" onclick="clearTable()">Clear List</button>
-                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add Employee to List</button>
-                <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate EML File</button>
+                <button type="button" class="btn-clear" onclick="clearTable()">Clear All</button>
+                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add to Batch</button>
+                <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate Email Draft</button>
             </div>
         </form>
     </div>
 
     <div class="outlook-subject-line" id="prevSubject">Subject: LCN Notification</div>
-    <div id="liveEmailBody" class="preview-content card">
-        <p style="text-align:center; color:#999; margin:40px 0;">Add employees to generate the preview table.</p>
-    </div>
+    <div id="liveEmailBody" class="preview-content card"></div>
 </div>
 
 <script>
@@ -131,6 +140,7 @@
     const GID = "604237371";
     let MASTER_DATA = [];
     let EMPLOYEE_LIST = [];
+    let RAW_BORDER_DATE = null;
 
     function initApp() {
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onLoad&gid=${GID}&headers=1&t=${Date.now()}`;
@@ -142,19 +152,44 @@
     window.onLoad = function(res) {
         MASTER_DATA = res.table.rows;
         document.getElementById('statusBadge').innerHTML = `● Connected (${MASTER_DATA.length} records)`;
+        renderPreview();
     };
+
+    function parseGoogleDate(dateStr) {
+        if (!dateStr) return null;
+        if (dateStr.includes("Date(")) {
+            const parts = dateStr.match(/\d+/g);
+            return new Date(parts[0], parts[1], parts[2]);
+        }
+        return new Date(dateStr);
+    }
+
+    function calculateDays() {
+        const borderDateInput = document.getElementById('inputBorderDate').value;
+        const lwdValue = document.getElementById('inputLastDay').value;
+        
+        if (RAW_BORDER_DATE && lwdValue) {
+            const d2 = new Date(lwdValue);
+            const diffTime = d2.getTime() - RAW_BORDER_DATE.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('dayResult').innerText = diffDays >= 0 ? `${diffDays} Days` : "Invalid Range";
+        } else {
+            document.getElementById('dayResult').innerText = "0 Days";
+        }
+        renderPreview();
+    }
 
     function validatePhone() {
         let val = document.getElementById('inputPhone').value.replace(/\D/g, '');
         if (val.startsWith('0')) val = val.substring(1);
         if (val.startsWith('966')) val = val.substring(3);
-        if (val.length > 0 && val[0] !== '5') { alert("Phone number must start with 5."); val = ''; }
+        if (val.length > 0 && val[0] !== '5') { alert("Phone must start with 5."); val = ''; }
         document.getElementById('inputPhone').value = val;
     }
 
     function liveSearch() {
         const val = document.getElementById('inputWorkerNo').value.trim().replace(/^L_?/i, '');
-        if (!val) return clearFormFields("");
+        if (!val) return clearSearchFields("");
         const match = MASTER_DATA.find(r => {
             const rowId = r.c[0] ? String(r.c[0].v).replace(/^L_?/i, '') : '';
             return rowId === val;
@@ -164,15 +199,29 @@
             document.getElementById('inputName').value = d[1]?.v || "";
             document.getElementById('inputProfession').value = d[2]?.v || ""; 
             document.getElementById('inputNationality').value = d[3]?.v || ""; 
-            document.getElementById('inputIqama').value = d[4]?.v || "";      
-            document.getElementById('inputPassport').value = d[5]?.v || "";
+            document.getElementById('inputAgency').value = d[6]?.v || ""; // Col 6
+            document.getElementById('inputGender').value = d[7]?.v || ""; // Col 7
+            document.getElementById('inputIqamaPass').value = d[4]?.v || d[5]?.v || "";
+
+            // Border Date (Col 8)
+            const borderRaw = d[8]?.v;
+            RAW_BORDER_DATE = parseGoogleDate(borderRaw);
+            if (RAW_BORDER_DATE) {
+                const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                document.getElementById('inputBorderDate').value = `${RAW_BORDER_DATE.getDate().toString().padStart(2, '0')}-${m[RAW_BORDER_DATE.getMonth()]}-${RAW_BORDER_DATE.getFullYear()}`;
+            } else {
+                document.getElementById('inputBorderDate').value = "N/A";
+            }
+            calculateDays();
         } else {
-            clearFormFields("Not Found");
+            clearSearchFields("Not Found");
         }
     }
 
-    function clearFormFields(msg) {
-        ['inputName', 'inputProfession', 'inputNationality', 'inputPassport', 'inputIqama'].forEach(f => document.getElementById(f).value = msg);
+    function clearSearchFields(msg) {
+        ['inputName', 'inputProfession', 'inputNationality', 'inputAgency', 'inputGender', 'inputIqamaPass', 'inputBorderDate'].forEach(f => document.getElementById(f).value = msg);
+        RAW_BORDER_DATE = null;
+        document.getElementById('dayResult').innerText = "0 Days";
     }
 
     function addEmployee() {
@@ -181,8 +230,8 @@
         const lwdVal = document.getElementById('inputLastDay').value;
         const reasonVal = document.getElementById('inputCase').value;
 
-        if (!idRaw || document.getElementById('inputName').value === "Not Found") return alert("Select a valid Employee.");
-        if (!phoneVal || !lwdVal || !reasonVal) return alert("Fill in Phone, LWD, and Reason.");
+        if (!idRaw || document.getElementById('inputName').value === "Not Found") return alert("Invalid Employee ID.");
+        if (!phoneVal || !lwdVal || !reasonVal) return alert("Fill Phone, LWD, and Reason.");
 
         const dt = new Date(lwdVal);
         const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -193,8 +242,7 @@
             name: document.getElementById('inputName').value,
             nat: document.getElementById('inputNationality').value,
             prof: document.getElementById('inputProfession').value,
-            iqama: document.getElementById('inputIqama').value,
-            pass: document.getElementById('inputPassport').value,
+            iqama: document.getElementById('inputIqamaPass').value,
             phone: `+966 ${phoneVal}`,
             lwd: formattedLWD,
             reason: reasonVal
@@ -202,21 +250,19 @@
 
         renderPreview();
         document.getElementById('lcnForm').reset();
-        clearFormFields("");
+        clearSearchFields("");
     }
 
-    function clearTable() { if(confirm("Clear list?")) { EMPLOYEE_LIST = []; renderPreview(); } }
+    function clearTable() { if(confirm("Clear current batch?")) { EMPLOYEE_LIST = []; renderPreview(); } }
 
     function renderPreview() {
+        const container = document.getElementById('liveEmailBody');
         if (EMPLOYEE_LIST.length === 0) {
-            document.getElementById('liveEmailBody').innerHTML = '<p style="text-align:center; color:#999; margin:40px 0;">Add employees to generate the preview table.</p>';
-            document.getElementById('prevSubject').innerText = "Subject: LCN Notification";
+            container.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">List is empty. Add workers above.</p>';
             return;
         }
 
-        const extraDetails = document.getElementById('inputExtraDetails').value;
-        const extraHtml = extraDetails ? `<p>${extraDetails.replace(/\n/g, '<br>')}</p>` : '';
-
+        const extraHtml = document.getElementById('inputExtraDetails').value ? `<p>${document.getElementById('inputExtraDetails').value.replace(/\n/g, '<br>')}</p>` : '';
         document.getElementById('prevSubject').innerText = `Subject: LCN: ${EMPLOYEE_LIST.map(e => e.id).join(", ")}`;
 
         let rows = "";
@@ -229,14 +275,13 @@
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.nat}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.prof}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.iqama}</td>
-                <td style="padding:8px; border:1px solid #CBD5E1;">${e.pass}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1;">${e.phone}</td>
-                <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.lwd || 'dd-MM-yyyy'}</td>
+                <td style="padding:8px; border:1px solid #CBD5E1; color:#000;">${e.lwd}</td>
                 <td style="padding:8px; border:1px solid #CBD5E1; font-weight:bold;">${e.reason}</td>
             </tr>`;
         });
 
-        const html = `
+        container.innerHTML = `
             <div style="font-family:'Calibri', sans-serif; font-size:11pt; color:#334155;">
                 <p>Dear Mirasol,</p>
                 <p>Kindly send LCN to agency for the following workers:</p>
@@ -247,8 +292,7 @@
                         <th style="padding:10px; border:1px solid #CBD5E1;">Name</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Nationality</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Profession</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama</th>
-                        <th style="padding:10px; border:1px solid #CBD5E1;">Passport</th>
+                        <th style="padding:10px; border:1px solid #CBD5E1;">Iqama/Passport</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Phone</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">LWD</th>
                         <th style="padding:10px; border:1px solid #CBD5E1;">Reason</th>
@@ -257,11 +301,10 @@
                 </table>
                 <br><p>Best regards,</p>
             </div>`;
-        document.getElementById('liveEmailBody').innerHTML = html;
     }
 
     function downloadEml() {
-        if (EMPLOYEE_LIST.length === 0) return alert("List is empty!");
+        if (EMPLOYEE_LIST.length === 0) return alert("Batch is empty!");
         const body = document.getElementById('liveEmailBody').innerHTML;
         const subject = document.getElementById('prevSubject').innerText.replace('Subject: ', '');
         const eml = `To: tamjad@smasco.com\nSubject: ${subject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n<html><body>${body}</body></html>`;
