@@ -16,6 +16,9 @@
             --accent-green: #2A9D8F;
             --calc-theme: #FFF9C4;
             --calc-border: #FBC02D;
+            --outlook-blue: #0078D4; 
+            /* Neutral colors for standard buttons */
+            --btn-neutral: #6C757D;
         }
 
         body { 
@@ -48,7 +51,6 @@
         input, select, textarea { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; font-family: 'Calibri', sans-serif; }
         input[readonly] { background-color: var(--autofill-bg); color: #444; }
         
-        /* Tenure Field styling */
         .tenure-field { background: var(--calc-theme); border: 1px solid var(--calc-border); color: #D32F2F; font-weight: bold; }
 
         .phone-input-wrapper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-left: 4px solid var(--hr-blue); background: white; }
@@ -59,9 +61,14 @@
         .preview-content { border: 1px solid #E1DFDD; border-top: none; padding: 20px; background: white; overflow-x: auto; border-radius: 0 0 4px 4px; }
 
         .btn-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-        .btn-add { background: var(--accent-green); color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
-        .btn-outlook { background: var(--hr-navy); color: white; padding: 10px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
-        .btn-clear { background: #e63946; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
+        
+        /* Reset to Normal/Neutral styles */
+        .btn-clear { background: var(--btn-neutral); color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-add { background: var(--hr-navy); color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; }
+        
+        /* High-prominence button */
+        .btn-outlook { background: var(--outlook-blue); color: white; padding: 10px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; }
+        .btn-outlook:hover { background: #005A9E; }
     </style>
 </head>
 <body onload="initApp()" oncontextmenu="return false">
@@ -83,7 +90,7 @@
             <div class="top-workflow-grid">
                 <div class="field-group">
                     <label style="font-weight: 800; color: var(--hr-navy);">Personnel ID (L#)</label>
-                    <input type="text" id="inputWorkerNo" placeholder="e.g. 606138" oninput="liveSearch()" style="border: 2px solid var(--hr-blue);">
+                    <input type="text" id="inputWorkerNo" maxlength="8" placeholder="e.g. 606138" oninput="liveSearch()" style="border: 2px solid var(--hr-blue);">
                 </div>
 
                 <div class="field-group">
@@ -143,7 +150,7 @@
 
             <div class="btn-group">
                 <button type="button" class="btn-clear" onclick="clearTable()">Clear All</button>
-                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add to Batch</button>
+                <button type="button" class="btn-add" onclick="addEmployee()">➕ Add to Batch of Email</button>
                 <button type="button" class="btn-outlook" onclick="downloadEml()">✉ Generate Email Draft</button>
             </div>
         </form>
@@ -167,6 +174,9 @@
     };
 
     function initApp() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('inputLastDay').value = today;
+
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:onLoad&gid=${GID}&headers=1&t=${Date.now()}`;
         const sc = document.createElement('script');
         sc.src = url;
@@ -216,7 +226,12 @@
     }
 
     function liveSearch() {
-        const val = document.getElementById('inputWorkerNo').value.trim().replace(/^L_?/i, '');
+        let val = document.getElementById('inputWorkerNo').value.trim().replace(/^L_?/i, '');
+        if (val.length > 8) {
+            val = val.substring(0, 8);
+            document.getElementById('inputWorkerNo').value = val;
+        }
+        
         if (!val) return clearSearchFields("");
         const match = MASTER_DATA.find(r => {
             const rowId = r.c[0] ? String(r.c[0].v).replace(/^L_?/i, '') : '';
@@ -278,6 +293,7 @@
         });
         renderPreview();
         document.getElementById('lcnForm').reset();
+        document.getElementById('inputLastDay').value = new Date().toISOString().split('T')[0];
         clearSearchFields("");
         document.getElementById('inputWorkerNo').value = "";
     }
